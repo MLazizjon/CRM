@@ -2,11 +2,8 @@ import './Sales.css';
 import { useState } from "react";
 import {
   Search,
-  Filter,
   Download,
-  Eye,
   MoreHorizontal,
-  ChevronDown,
   Calendar,
   TrendingUp,
   ShoppingCart,
@@ -14,6 +11,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { recentSales } from "../data/mockData";
+
 const statusBadge = {
   paid: {
     label: "To'landi",
@@ -36,6 +34,7 @@ const statusBadge = {
     color: "var(--text-muted)",
   },
 };
+
 const allSales = [
   ...recentSales,
   {
@@ -84,9 +83,11 @@ const allSales = [
     status: "debt",
   },
 ];
+
 export default function Sales({ onNavigate }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+
   const filtered = allSales.filter((s) => {
     const matchSearch =
       s.customer.toLowerCase().includes(search.toLowerCase()) ||
@@ -94,6 +95,36 @@ export default function Sales({ onNavigate }) {
     const matchStatus = statusFilter === "all" || s.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  // Export funksiyasi
+  const handleExport = () => {
+    if (!filtered.length) return;
+
+    const headers = ["Sotuv ID", "Mijoz", "Mahsulotlar soni", "Summa (so'm)", "To'lov turi", "Sana", "Holat"];
+    
+    const rows = filtered.map((s) => [
+      s.id,
+      `"${s.customer}"`,
+      s.products,
+      s.amount,
+      `"${s.payment}"`,
+      `"${s.date}"`,
+      `"${statusBadge[s.status]?.label || s.status}"`,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8,\uFEFF" +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `sotuvlar_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const stats = [
     {
       label: "Jami sotuvlar",
@@ -128,6 +159,7 @@ export default function Sales({ onNavigate }) {
       bg: "var(--warning-light)",
     },
   ];
+
   return (
     <div className="space-y-6 fade-in">
       <div className="flex items-center justify-between">
@@ -152,7 +184,8 @@ export default function Sales({ onNavigate }) {
         </div>
         <div className="flex items-center gap-2">
           <button
-            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:bg-gray-50"
+            onClick={handleExport}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium border transition-colors hover:bg-gray-50 active:scale-95"
             style={{
               border: "1px solid var(--border)",
               color: "var(--text-secondary)",

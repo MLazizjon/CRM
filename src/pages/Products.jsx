@@ -12,6 +12,7 @@ import {
   X,
   PackagePlus,
   Save,
+  AlertTriangle,
 } from "lucide-react";
 import { products as initialProducts } from "../data/mockData";
 import { useToast } from "../context/ToastContext";
@@ -40,9 +41,12 @@ export default function Products({ onNavigate }) {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("all");
 
-  // Modal holatlari
+  // Modal holatlari (Qo'shish/Tahrirlash)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  // O'chirish modali uchun holat
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // Form holati
   const [formData, setFormData] = useState({
@@ -69,7 +73,45 @@ export default function Products({ onNavigate }) {
     );
   });
 
-  // Modalni ochish (Yangi qo'shish yoki Tahrirlash rejasi)
+  // Sof JavaScript orqali Excel (CSV) tayyorlash va yuklab olish
+  const handleExportExcel = () => {
+    try {
+      const headers = [
+        "№,Mahsulot nomi,Brend,SKU kodi,Kategoriya,Sotuv narxi,Tan narxi,Qoldiq,Holati\n",
+      ];
+
+      const rows = filtered.map((p, index) =>
+        [
+          index + 1,
+          `"${p.name || ""}"`,
+          `"${p.brand || "-"}"`,
+          `"${p.sku || ""}"`,
+          `"${p.category || ""}"`,
+          p.price || 0,
+          p.cost || 0,
+          p.stock || 0,
+          `"${statusMap[p.status]?.label || "Faol"}"`,
+        ].join(",")
+      );
+
+      const csvContent = "\uFEFF" + headers.concat(rows).join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", "Mahsulotlar_Ro'yxati.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      success("Excel fayli muvaffaqiyatli yuklab olindi!");
+    } catch (err) {
+      console.error("Export xatoligi:", err);
+    }
+  };
+
+  // Modalni ochish (Add / Edit)
   const handleOpenModal = (product = null) => {
     if (product) {
       setEditingProduct(product);
@@ -114,7 +156,6 @@ export default function Products({ onNavigate }) {
     else if (stockNum < 10) status = "low";
 
     if (editingProduct) {
-      // Tahrirlash
       setProductList((prev) =>
         prev.map((p) =>
           p.id === editingProduct.id
@@ -131,7 +172,6 @@ export default function Products({ onNavigate }) {
       );
       success("Mahsulot muvaffaqiyatli tahrirlandi!");
     } else {
-      // Yangi qo'shish
       const newProduct = {
         id: Date.now().toString(),
         ...formData,
@@ -147,12 +187,17 @@ export default function Products({ onNavigate }) {
     handleCloseModal();
   };
 
-  // Mahsulotni O'chirish
-  const handleDelete = (id) => {
-    if (window.confirm("Haqiqatan ham ushbu mahsulotni o'chirmoqchimisiz?")) {
-      setProductList((prev) => prev.filter((p) => p.id !== id));
-      success("Mahsulot o'chirildi!");
-    }
+  // O'chirish modalini ochish
+  const promptDelete = (product) => {
+    setDeleteTarget(product);
+  };
+
+  // O'chirishni tasdiqlash (Ha bosilganda)
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    setProductList((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+    success(`"${deleteTarget.name}" mahsuloti muvaffaqiyatli o'chirildi!`);
+    setDeleteTarget(null);
   };
 
   return (
@@ -167,7 +212,7 @@ export default function Products({ onNavigate }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="btn-ghost text-sm">
+          <button onClick={handleExportExcel} className="btn-ghost text-sm">
             <Download size={14} /> Export
           </button>
           <button
@@ -363,7 +408,7 @@ export default function Products({ onNavigate }) {
                         <Edit2 size={14} />
                       </button>
                       <button
-                        onClick={() => handleDelete(p.id)}
+                        onClick={() => promptDelete(p)}
                         className="p-1.5 rounded-lg transition-colors hover:opacity-70 text-danger-color"
                       >
                         <Trash2 size={14} />
@@ -546,12 +591,55 @@ export default function Products({ onNavigate }) {
                   >
                     Bekor qilish
                   </button>
-                  <button type="submit" className="btn-primary flex-1 justify-center">
-                    {editingProduct ? <Save size={14} /> : <PackagePlus size={14} />}
+                  <button
+                    type="submit"
+                    className="btn-primary flex-1 justify-center"
+                  >
+                    {editingProduct ? (
+                      <Save size={14} />
+                    ) : (
+                      <PackagePlus size={14} />
+                    )}
                     {editingProduct ? "Saqlash" : "Qo'shish"}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* O'chirishni Tasdiqlash Modali */}
+      {deleteTarget &&
+        createPortal(
+          <div className="modal-backdrop">
+            <div className="modal-card max-w-sm text-center">
+              <div className="w-12 h-12 rounded-2xl bg-danger-light text-danger flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle size={24} />
+              </div>
+              <h3 className="font-display font-bold text-lg text-primary-color mb-1">
+                Mahsulotni o'chirmoqchimisiz?
+              </h3>
+              <p className="text-xs text-muted-color mb-6">
+                <strong>"{deleteTarget.name}"</strong> ro'yxatdan butunlay olib tashlanadi. Ushbu amalni ortga qaytarib bo'lmaydi.
+              </p>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDeleteTarget(null)}
+                  className="btn-ghost flex-1 justify-center"
+                >
+                  Yo'q, bekor qilish
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDelete}
+                  className="btn-primary flex-1 justify-center bg-danger hover:bg-danger/90 text-white border-none"
+                  style={{ background: "var(--danger)", color: "#fff" }}
+                >
+                  Ha, o'chirilsin
+                </button>
+              </div>
             </div>
           </div>,
           document.body

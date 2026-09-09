@@ -15,7 +15,6 @@ import {
   CheckCircle,
   Copy,
   Clock,
-  Package,
   X,
 } from "lucide-react";
 import { customers, recentSales } from "../data/mockData";

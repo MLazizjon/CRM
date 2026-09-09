@@ -1,10 +1,6 @@
 import './ErrorPages.css';
 import {
-  Home,
-  RefreshCw,
   Search,
-  Lock,
-  WifiOff,
   AlertTriangle,
 } from "lucide-react";
 const Base = ({ emoji, code, title, subtitle, actions }) => (

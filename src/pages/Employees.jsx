@@ -7,7 +7,6 @@ import {
   ShoppingCart,
   TrendingUp,
   UserCog,
-  Clock,
 } from "lucide-react";
 import { employees as employeesSeed } from "../data/mockData";
 import Modal, { Field } from "../components/Modal";

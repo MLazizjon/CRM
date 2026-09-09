@@ -8,13 +8,9 @@ import {
   DollarSign,
   BarChart3,
   ShoppingCart,
-  Clock,
   ArrowUpCircle,
   ArrowDownCircle,
   Copy,
-  Tag,
-  Building2,
-  CheckCircle,
 } from "lucide-react";
 import { products, recentSales } from "../data/mockData";
 import {
@@ -22,8 +18,6 @@ import {
   AreaChart,
   Area,
   XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip,
 } from "recharts";
 import { useToast } from "../context/ToastContext";

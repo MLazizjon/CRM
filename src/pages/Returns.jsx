@@ -136,7 +136,7 @@ export default function Returns() {
             color: "var(--warning)",
           },
           {
-            label: "Qaytarilgan summa",
+            label: "Umumiy Qaytarilgan summa",
             value: (totalReturned / 1000000).toFixed(2) + " mln so'm",
             color: "var(--danger)",
           },

@@ -7,16 +7,12 @@ import {
   CreditCard,
   AlertTriangle,
   ArrowUpRight,
-  MoreHorizontal,
-  RefreshCw,
-  Eye,
   Plus,
   Download,
   Boxes,
 } from "lucide-react";
 import {
   ResponsiveContainer,
-  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -24,7 +20,6 @@ import {
   Tooltip,
   Area,
   AreaChart,
-  Legend,
 } from "recharts";
 import {
   salesData,
@@ -33,12 +28,16 @@ import {
   lowStockItems,
   recentSales,
 } from "../data/mockData";
+
 const fmt = (n) => {
+  if (n === null || n === undefined) return "0";
   if (n >= 1000000) return (n / 1000000).toFixed(1) + " mln";
   if (n >= 1000) return (n / 1000).toFixed(0) + " ming";
   return n.toLocaleString();
 };
+
 const fmtFull = (n) => n.toLocaleString() + " so'm";
+
 const statusBadge = {
   paid: {
     label: "To'landi",
@@ -61,6 +60,7 @@ const statusBadge = {
     color: "var(--text-muted)",
   },
 };
+
 const stockStatus = {
   critical: {
     label: "Tugagan",
@@ -78,6 +78,7 @@ const stockStatus = {
     color: "var(--success)",
   },
 };
+
 const KpiCard = ({ icon: Icon, label, value, change, sub, color, bg }) => (
   <div
     className="rounded-2xl p-5 transition-card cursor-default"
@@ -141,6 +142,7 @@ const KpiCard = ({ icon: Icon, label, value, change, sub, color, bg }) => (
     </div>
   </div>
 );
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -175,9 +177,15 @@ const CustomTooltip = ({ active, payload, label }) => {
     </div>
   );
 };
+
 export default function Dashboard({ onNavigate }) {
+  const [timeRange, setTimeRange] = useState("Bugun");
   const [range, setRange] = useState("7d");
+
   const data = range === "7d" || range === "30d" ? salesData : monthlyData;
+
+  const filterButtons = ["Bugun", "Hafta", "Oy"];
+
   const ranges = [
     {
       key: "7d",
@@ -196,6 +204,7 @@ export default function Dashboard({ onNavigate }) {
       label: "1 yil",
     },
   ];
+
   return (
     <div className="space-y-6 fade-in">
       {/* Header */}
@@ -226,15 +235,16 @@ export default function Dashboard({ onNavigate }) {
             border: "1px solid var(--border)",
           }}
         >
-          {["Bugun", "Hafta", "Oy"].map((t) => (
+          {filterButtons.map((t) => (
             <button
               key={t}
+              onClick={() => setTimeRange(t)}
               className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
               style={{
-                background: t === "Bugun" ? "var(--surface)" : "transparent",
-                color: t === "Bugun" ? "var(--text-primary)" : "var(--text-muted)",
+                background: t === timeRange ? "var(--surface)" : "transparent",
+                color: t === timeRange ? "var(--text-primary)" : "var(--text-muted)",
                 boxShadow:
-                  t === "Bugun" ? "0 1px 4px rgba(15,23,42,0.08)" : "none",
+                  t === timeRange ? "0 1px 4px rgba(15,23,42,0.08)" : "none",
               }}
             >
               {t}
@@ -340,14 +350,14 @@ export default function Dashboard({ onNavigate }) {
               ))}
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={230}>
             <AreaChart
               data={data}
               margin={{
-                top: 0,
-                right: 8,
+                top: 15,
+                right: 10,
                 bottom: 0,
-                left: 0,
+                left: 10,
               }}
             >
               <defs>
@@ -382,7 +392,7 @@ export default function Dashboard({ onNavigate }) {
                 }}
                 axisLine={false}
                 tickLine={false}
-                width={55}
+                width={75}
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
@@ -600,7 +610,7 @@ export default function Dashboard({ onNavigate }) {
               </tr>
             </thead>
             <tbody>
-              {recentSales.map((s, i) => {
+              {recentSales.map((s) => {
                 const st = statusBadge[s.status];
                 return (
                   <tr

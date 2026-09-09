@@ -1,8 +1,9 @@
 import './Settings.css';
-import { useState } from "react";
-import { User, Palette, Lock, Sun, Moon } from "lucide-react";
+import { useState, useRef } from "react";
+import { User, Palette, Lock, Sun, Moon, Upload } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { useToast } from "../context/ToastContext";
+
 const sections = [
   {
     key: "profile",
@@ -20,6 +21,7 @@ const sections = [
     icon: Lock,
   },
 ];
+
 const InputRow = ({ label, value, type = "text", placeholder }) => (
   <div>
     <label
@@ -38,6 +40,7 @@ const InputRow = ({ label, value, type = "text", placeholder }) => (
     />
   </div>
 );
+
 const Toggle = ({ label, desc, defaultOn }) => {
   const [on, setOn] = useState(defaultOn ?? false);
   return (
@@ -85,21 +88,67 @@ const Toggle = ({ label, desc, defaultOn }) => {
     </div>
   );
 };
+
 function ProfileContent() {
-  const { success } = useToast();
+  const { success, error } = useToast();
+  const [avatar, setAvatar] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        error("Rasm hajmi 2MB dan oshmasligi kerak!");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setAvatar(reader.result);
+        success("Rasm yuklandi");
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-4">
+        {/* Rasm tanlangan bo'lsa ko'rsatadi, aks holda AQ initsialini chiqaradi */}
         <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold"
+          className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold overflow-hidden"
           style={{
-            background: "linear-gradient(135deg,var(--brand),var(--violet))",
+            background: avatar
+              ? "none"
+              : "linear-gradient(135deg,var(--brand),var(--violet))",
           }}
         >
-          AQ
+          {avatar ? (
+            <img
+              src={avatar}
+              alt="Avatar"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            "AQ"
+          )}
         </div>
+
         <div>
-          <button className="btn-ghost text-sm">Rasmni o'zgartirish</button>
+          {/* Yashirin fayl tanlash inputi */}
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            accept="image/png, image/jpeg, image/jpg"
+            className="hidden"
+          />
+          <button
+            className="btn-ghost text-sm flex items-center gap-2"
+            onClick={() => fileInputRef.current?.click()}
+            type="button"
+          >
+            <Upload size={14} /> Rasmni o'zgartirish
+          </button>
           <p
             className="text-xs mt-1"
             style={{
@@ -110,6 +159,7 @@ function ProfileContent() {
           </p>
         </div>
       </div>
+
       <div className="grid grid-cols-2 gap-4">
         <InputRow label="Ism" value="Alisher" />
         <InputRow label="Familiya" value="Qodirov" />
@@ -117,6 +167,7 @@ function ProfileContent() {
         <InputRow label="Email" value="alisher@uymarket.uz" type="email" />
       </div>
       <InputRow label="Lavozim" value="Administrator" />
+
       <div className="flex justify-end">
         <button
           onClick={() => success("Profil saqlandi")}
@@ -128,9 +179,11 @@ function ProfileContent() {
     </div>
   );
 }
+
 function AppearanceContent() {
   const { dark, toggle } = useTheme();
   const { success } = useToast();
+
   return (
     <div className="space-y-6">
       <div>
@@ -155,12 +208,6 @@ function AppearanceContent() {
               label: "Qorong'u",
               icon: Moon,
               bg: "#0B1120",
-            },
-            {
-              key: "system",
-              label: "Tizim",
-              icon: null,
-              bg: "linear-gradient(to right,#F7F8FC 50%,#0B1120 50%)",
             },
           ].map((t) => {
             const active =
@@ -204,31 +251,7 @@ function AppearanceContent() {
           })}
         </div>
       </div>
-      <div>
-        <label
-          className="block text-sm font-semibold mb-2"
-          style={{
-            color: "var(--text-primary)",
-          }}
-        >
-          Asosiy rang
-        </label>
-        <div className="flex items-center gap-3">
-          {["#2563EB", "#7C3AED", "#10B981", "#0EA5E9", "#EF4444"].map(
-            (color) => (
-              <button
-                key={color}
-                className="w-9 h-9 rounded-xl border-2 transition-all hover:scale-110"
-                style={{
-                  background: color,
-                  borderColor:
-                    color === "#2563EB" ? "var(--text-primary)" : "transparent",
-                }}
-              />
-            ),
-          )}
-        </div>
-      </div>
+
       <button
         onClick={() => success("Sozlamalar saqlandi")}
         className="btn-primary"
@@ -238,8 +261,10 @@ function AppearanceContent() {
     </div>
   );
 }
+
 function SecurityContent() {
   const { success } = useToast();
+
   return (
     <div className="space-y-5">
       <div
@@ -266,15 +291,17 @@ function SecurityContent() {
           So'nggi kirish: 08 Sep 2026, 09:24 — Toshkent
         </p>
       </div>
+
       <div className="space-y-4">
         <InputRow label="Joriy parol" type="password" placeholder="••••••••" />
         <InputRow label="Yangi parol" type="password" placeholder="••••••••" />
         <InputRow
-          label="Yangi parolni tasdiql"
+          label="Yangi parolni tasdiqlang"
           type="password"
           placeholder="••••••••"
         />
       </div>
+
       <Toggle
         label="Ikki bosqichli tasdiqlash"
         desc="SMS yoki authenticator orqali"
@@ -285,6 +312,7 @@ function SecurityContent() {
         desc="Barcha kirish va amallarni saqlash"
         defaultOn
       />
+
       <div className="flex justify-end mt-2">
         <button
           onClick={() => success("Parol yangilandi")}
@@ -296,14 +324,17 @@ function SecurityContent() {
     </div>
   );
 }
+
 const contentMap = {
   profile: <ProfileContent />,
   appearance: <AppearanceContent />,
   security: <SecurityContent />,
 };
+
 export default function Settings() {
   const [active, setActive] = useState("profile");
   const section = sections.find((s) => s.key === active);
+
   return (
     <div className="space-y-6 fade-in">
       <div>
@@ -379,6 +410,7 @@ export default function Settings() {
           >
             {section?.label}
           </h2>
+
           {contentMap[active] || (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div

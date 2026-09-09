@@ -2,7 +2,6 @@ import "./Inventory.css";
 import { useState } from "react";
 import {
   Search,
-  Plus,
   ArrowUpCircle,
   ArrowDownCircle,
   AlertTriangle,

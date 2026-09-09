@@ -6,7 +6,6 @@ import {
   Crown,
   UserX,
   Copy,
-  MoreHorizontal,
   Users,
   CreditCard,
   X,
@@ -104,7 +103,7 @@ export default function Customers({ filter, onNavigate }) {
     .reduce((s, c) => s + c.debt, 0);
 
   return (
-    <div className="space-y-6 fade-in">
+    <div className="space-y-6 fade-in relative">
       {/* Sarlavha bo'limi */}
       <div className="flex items-center justify-between relative w-full">
         <div>
@@ -253,7 +252,6 @@ export default function Customers({ filter, onNavigate }) {
                 "Qarzdorlik",
                 "So'nggi xarid",
                 "Holat",
-                "",
               ].map((h, i) => (
                 <th
                   key={i}
@@ -385,14 +383,6 @@ export default function Customers({ filter, onNavigate }) {
                       {st.label}
                     </span>
                   </td>
-                  <td className="px-5 py-3.5">
-                    <button
-                      className="p-1.5 rounded-lg hover:opacity-70 transition-opacity cursor-pointer"
-                      style={{ color: "var(--text-faint)" }}
-                    >
-                      <MoreHorizontal size={15} />
-                    </button>
-                  </td>
                 </tr>
               );
             })}
@@ -409,18 +399,59 @@ export default function Customers({ filter, onNavigate }) {
         </div>
       </div>
 
-      {/* Modal Oynasi */}
+      {/* Ekran markazida turuvchi va zamonaviy dizaynga ega Modal */}
       {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-brand-light">
-                  <UserPlus size={18} style={{ color: "var(--brand)" }} />
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.4)",
+            backdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 99999,
+          }}
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: "var(--surface, #ffffff)",
+              borderRadius: "20px",
+              width: "100%",
+              maxWidth: "460px",
+              padding: "24px",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              border: "1px solid var(--border, #e2e8f0)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-3">
+                <div
+                  className="p-2.5 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: "var(--brand-light, #eff6ff)",
+                    color: "var(--brand, #2563eb)",
+                  }}
+                >
+                  <UserPlus size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">Yangi mijoz qo'shish</h3>
-                  <p className="text-xs text-muted">
+                  <h3
+                    className="text-base font-bold"
+                    style={{ color: "var(--text-primary, #0f172a)" }}
+                  >
+                    Yangi mijoz qo'shish
+                  </h3>
+                  <p
+                    className="text-xs mt-0.5"
+                    style={{ color: "var(--text-muted, #64748b)" }}
+                  >
                     Mijoz ma'lumotlarini kiriting
                   </p>
                 </div>
@@ -428,15 +459,22 @@ export default function Customers({ filter, onNavigate }) {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="modal-close-btn"
+                className="p-1.5 rounded-lg transition-colors cursor-pointer"
+                style={{ color: "var(--text-muted, #94a3b8)" }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddCustomer} className="modal-body">
-              <div className="form-group">
-                <label>F.I.SH (Ismi va Familiyasi)</label>
+            {/* Modal Form */}
+            <form onSubmit={handleAddCustomer} className="mt-5 space-y-4">
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1.5"
+                  style={{ color: "var(--text-secondary, #334155)" }}
+                >
+                  F.I.SH (Ismi va Familiyasi)
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -444,11 +482,22 @@ export default function Customers({ filter, onNavigate }) {
                   placeholder="Masalan: Ali Valiyev"
                   value={formData.name}
                   onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl outline-none transition-all"
+                  style={{
+                    background: "var(--input-bg, #f8fafc)",
+                    border: "1px solid var(--border, #e2e8f0)",
+                    color: "var(--text-primary, #0f172a)",
+                  }}
                 />
               </div>
 
-              <div className="form-group">
-                <label>Telefon raqami</label>
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1.5"
+                  style={{ color: "var(--text-secondary, #334155)" }}
+                >
+                  Telefon raqami
+                </label>
                 <input
                   type="text"
                   name="phone"
@@ -456,16 +505,33 @@ export default function Customers({ filter, onNavigate }) {
                   placeholder="+998 90 123 45 67"
                   value={formData.phone}
                   onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl outline-none transition-all"
+                  style={{
+                    background: "var(--input-bg, #f8fafc)",
+                    border: "1px solid var(--border, #e2e8f0)",
+                    color: "var(--text-primary, #0f172a)",
+                  }}
                 />
               </div>
 
-              <div className="form-grid">
-                <div className="form-group">
-                  <label>Viloyat / Hudud</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    className="block text-xs font-medium mb-1.5"
+                    style={{ color: "var(--text-secondary, #334155)" }}
+                  >
+                    Viloyat / Hudud
+                  </label>
                   <select
                     name="region"
                     value={formData.region}
                     onChange={handleInputChange}
+                    className="w-full px-3 py-2.5 text-sm rounded-xl outline-none transition-all cursor-pointer"
+                    style={{
+                      background: "var(--input-bg, #f8fafc)",
+                      border: "1px solid var(--border, #e2e8f0)",
+                      color: "var(--text-primary, #0f172a)",
+                    }}
                   >
                     <option value="Toshkent">Toshkent</option>
                     <option value="Samarqand">Samarqand</option>
@@ -478,12 +544,23 @@ export default function Customers({ filter, onNavigate }) {
                   </select>
                 </div>
 
-                <div className="form-group">
-                  <label>Mijoz maqomi (Status)</label>
+                <div>
+                  <label
+                    className="block text-xs font-medium mb-1.5"
+                    style={{ color: "var(--text-secondary, #334155)" }}
+                  >
+                    Mijoz maqomi
+                  </label>
                   <select
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
+                    className="w-full px-3 py-2.5 text-sm rounded-xl outline-none transition-all cursor-pointer"
+                    style={{
+                      background: "var(--input-bg, #f8fafc)",
+                      border: "1px solid var(--border, #e2e8f0)",
+                      color: "var(--text-primary, #0f172a)",
+                    }}
                   >
                     <option value="regular">Oddiy</option>
                     <option value="active">Faol</option>
@@ -493,26 +570,45 @@ export default function Customers({ filter, onNavigate }) {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label>Boshlang'ich qarzdorlik (so'mda)</label>
+              <div>
+                <label
+                  className="block text-xs font-medium mb-1.5"
+                  style={{ color: "var(--text-secondary, #334155)" }}
+                >
+                  Boshlang'ich qarzdorlik (so'mda)
+                </label>
                 <input
                   type="number"
                   name="debt"
                   placeholder="0"
                   value={formData.debt}
                   onChange={handleInputChange}
+                  className="w-full px-3.5 py-2.5 text-sm rounded-xl outline-none transition-all"
+                  style={{
+                    background: "var(--input-bg, #f8fafc)",
+                    border: "1px solid var(--border, #e2e8f0)",
+                    color: "var(--text-primary, #0f172a)",
+                  }}
                 />
               </div>
 
-              <div className="modal-footer">
+              {/* Modal Footer (Tugmalar) */}
+              <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn-secondary"
+                  className="px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+                  style={{
+                    background: "var(--surface-2, #f1f5f9)",
+                    color: "var(--text-muted, #475569)",
+                  }}
                 >
                   Bekor qilish
                 </button>
-                <button type="submit" className="btn-primary">
+                <button
+                  type="submit"
+                  className="btn-primary px-5 py-2 text-xs font-semibold rounded-xl cursor-pointer"
+                >
                   Saqlash
                 </button>
               </div>

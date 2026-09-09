@@ -6,10 +6,8 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  TrendingDown,
   Users,
   X,
-  ChevronDown,
   Phone,
   Copy,
 } from "lucide-react";

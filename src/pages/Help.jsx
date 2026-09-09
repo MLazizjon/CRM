@@ -115,7 +115,20 @@ export default function Help() {
             </div>
           </a>
           <a
-            href="mailto: support@uymarket.uz"
+            href="tel:+998773445259"
+            className="flex items-center gap-3 p-4 rounded-xl transition-colors hover:opacity-80"
+            style={{ background: "var(--surface-2)" }}
+          >
+            <span className="p-2 rounded-lg" style={{ background: "var(--success-light)" }}>
+              <Phone size={14} style={{ color: "var(--success)" }} />
+            </span>
+            <div>
+              <div className="text-xs" style={{ color: "var(--text-faint)" }}>Qo'shimcha raqam</div>
+              <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>+998 77 344 52 59</div>
+            </div>
+          </a>
+          <a
+            href="mailto:support@uymarket.uz"
             className="flex items-center gap-3 p-4 rounded-xl transition-colors hover:opacity-80"
             style={{ background: "var(--surface-2)" }}
           >
@@ -127,15 +140,6 @@ export default function Help() {
               <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>support@uymarket.uz</div>
             </div>
           </a>
-          <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: "var(--surface-2)" }}>
-            <span className="p-2 rounded-lg" style={{ background: "var(--success-light)" }}>
-              <MessageCircle size={14} style={{ color: "var(--success)" }} />
-            </span>
-            <div>
-              <div className="text-xs" style={{ color: "var(--text-faint)" }}>Ish vaqti</div>
-              <div className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Dush–Shan, 9:00–18:00</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
