@@ -3,8 +3,6 @@ import { useState } from "react";
 import {
   Search,
   Download,
-  MoreHorizontal,
-  Calendar,
   TrendingUp,
   ShoppingCart,
   DollarSign,
@@ -96,12 +94,11 @@ export default function Sales({ onNavigate }) {
     return matchSearch && matchStatus;
   });
 
-  // Export funksiyasi
   const handleExport = () => {
     if (!filtered.length) return;
 
     const headers = ["Sotuv ID", "Mijoz", "Mahsulotlar soni", "Summa (so'm)", "To'lov turi", "Sana", "Holat"];
-    
+
     const rows = filtered.map((s) => [
       s.id,
       `"${s.customer}"`,
@@ -342,15 +339,6 @@ export default function Sales({ onNavigate }) {
               </button>
             ))}
           </div>
-          <button
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm border transition-colors hover:bg-gray-50"
-            style={{
-              border: "1px solid var(--border)",
-              color: "var(--text-muted)",
-            }}
-          >
-            <Calendar size={14} /> Sana
-          </button>
         </div>
 
         <table className="w-full">
@@ -368,7 +356,6 @@ export default function Sales({ onNavigate }) {
                 "To'lov",
                 "Sana",
                 "Holat",
-                "",
               ].map((h) => (
                 <th
                   key={h}
@@ -468,16 +455,6 @@ export default function Sales({ onNavigate }) {
                     >
                       {st.label}
                     </span>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <button
-                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-                      style={{
-                        color: "var(--text-faint)",
-                      }}
-                    >
-                      <MoreHorizontal size={15} />
-                    </button>
                   </td>
                 </tr>
               );

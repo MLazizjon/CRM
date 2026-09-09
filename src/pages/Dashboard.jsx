@@ -179,12 +179,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function Dashboard({ onNavigate }) {
-  const [timeRange, setTimeRange] = useState("Bugun");
   const [range, setRange] = useState("7d");
 
   const data = range === "7d" || range === "30d" ? salesData : monthlyData;
-
-  const filterButtons = ["Bugun", "Hafta", "Oy"];
 
   const ranges = [
     {
@@ -227,29 +224,6 @@ export default function Dashboard({ onNavigate }) {
           >
             Bugungi do'kon faoliyati haqida qisqacha ma'lumot.
           </p>
-        </div>
-        <div
-          className="flex items-center gap-1 rounded-xl p-1"
-          style={{
-            background: "var(--input-bg)",
-            border: "1px solid var(--border)",
-          }}
-        >
-          {filterButtons.map((t) => (
-            <button
-              key={t}
-              onClick={() => setTimeRange(t)}
-              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all"
-              style={{
-                background: t === timeRange ? "var(--surface)" : "transparent",
-                color: t === timeRange ? "var(--text-primary)" : "var(--text-muted)",
-                boxShadow:
-                  t === timeRange ? "0 1px 4px rgba(15,23,42,0.08)" : "none",
-              }}
-            >
-              {t}
-            </button>
-          ))}
         </div>
       </div>
 
