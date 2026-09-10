@@ -9,6 +9,10 @@ import {
   X,
   Download,
   Pencil,
+  Trash2,
+  AlertTriangle,
+  ArrowDownRight,
+  ArrowUpRight,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -54,8 +58,31 @@ const CustomBarTooltip = ({ active, payload, label }) => {
 };
 
 export default function Finance() {
-  const [showExpenseModal, setShowExpenseModal] = useState(false);
-  const [editingExpenseIndex, setEditingExpenseIndex] = useState(null);
+  const [activeTab, setActiveTab] = useState("all"); // "all" | "income" | "expense"
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState("expense"); // "income" yoki "expense"
+  const [editingIndex, setEditingIndex] = useState(null);
+
+  // O'chirish modalining holati
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, index: null, type: null });
+
+  // Kirimlar ro'yxati
+  const [incomes, setIncomes] = useState([
+    {
+      category: "Savdo",
+      amount: 45000000,
+      date: "2026-09-09",
+      employee: "Admin",
+      description: "Do'kon asosiy savdosi",
+    },
+    {
+      category: "Buyurtmalar",
+      amount: 25000000,
+      date: "2026-09-05",
+      employee: "Jasur N.",
+      description: "Onlayn buyurtmalar tushumi",
+    },
+  ]);
 
   // Xarajatlar ro'yxati
   const [expenses, setExpenses] = useState([
@@ -105,19 +132,23 @@ export default function Finance() {
 
   // Modal ma'lumotlari
   const [formData, setFormData] = useState({
-    category: initialCategories[0]?.name || "Ijara",
+    category: "Savdo",
     amount: "",
     date: new Date().toISOString().split("T")[0],
     employee: "Admin",
     description: "",
   });
 
-  // Jami xarajat
+  // Jami kirim va xarajatlar
+  const totalIncomeValue = useMemo(() => {
+    return incomes.reduce((acc, curr) => acc + Number(curr.amount), 0);
+  }, [incomes]);
+
   const totalExpenseValue = useMemo(() => {
     return expenses.reduce((acc, curr) => acc + Number(curr.amount), 0);
   }, [expenses]);
 
-  // Kategoriyalar
+  // Kategoriyalar (Xarajat uchun)
   const currentExpenseCategories = useMemo(() => {
     return initialCategories.map((cat) => {
       const catTotal = expenses
@@ -127,20 +158,17 @@ export default function Finance() {
     });
   }, [expenses]);
 
-  // 140 mln so'm daromad
-  const monthlyRevenue = 140000000;
-
   const kpis = [
     {
-      label: "Oylik daromad",
-      value: monthlyRevenue.toLocaleString("ru-RU"),
+      label: "Jami kirim (Daromad)",
+      value: totalIncomeValue.toLocaleString("ru-RU"),
       change: "+12.4%",
       icon: TrendingUp,
       color: "var(--brand)",
       bg: "var(--brand-light)",
     },
     {
-      label: "Oylik xarajatlar",
+      label: "Jami chiqim (Xarajat)",
       value: totalExpenseValue.toLocaleString("ru-RU"),
       change: "+5.1%",
       icon: TrendingDown,
@@ -149,7 +177,7 @@ export default function Finance() {
     },
     {
       label: "Sof foyda",
-      value: (monthlyRevenue - totalExpenseValue).toLocaleString("ru-RU"),
+      value: (totalIncomeValue - totalExpenseValue).toLocaleString("ru-RU"),
       change: "+16.2%",
       icon: DollarSign,
       color: "var(--success)",
@@ -167,49 +195,69 @@ export default function Finance() {
 
   // CSV yuklash
   const handleExportCSV = () => {
-    const headers = ["Kategoriya,Summa (so'm),Sana,Xodim,Tavsif"];
-    const rows = expenses.map(
-      (e) => `"${e.category}",${e.amount},"${e.date}","${e.employee}","${e.description}"`
+    const headers = ["Turi,Kategoriya,Summa (so'm),Sana,Xodim,Tavsif"];
+    const incomeRows = incomes.map(
+      (e) => `"Kirim","${e.category}",${e.amount},"${e.date}","${e.employee}","${e.description}"`
     );
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers, ...rows].join("\n");
+    const expenseRows = expenses.map(
+      (e) => `"Chiqim","${e.category}",${e.amount},"${e.date}","${e.employee}","${e.description}"`
+    );
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" + [headers, ...incomeRows, ...expenseRows].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `xarajatlar_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `moliya_hisobot_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const handleOpenAddModal = () => {
-    setEditingExpenseIndex(null);
+  const handleOpenModal = (type) => {
+    setModalType(type);
+    setEditingIndex(null);
     setFormData({
-      category: initialCategories[0]?.name || "Ijara",
+      category: type === "income" ? "Savdo" : (initialCategories[0]?.name || "Ijara"),
       amount: "",
       date: new Date().toISOString().split("T")[0],
       employee: "Admin",
       description: "",
     });
-    setShowExpenseModal(true);
+    setShowModal(true);
   };
 
-  const handleOpenEditModal = (index, expense) => {
-    setEditingExpenseIndex(index);
+  const handleOpenEditModal = (type, index, item) => {
+    setModalType(type);
+    setEditingIndex(index);
     setFormData({
-      category: expense.category,
-      amount: expense.amount,
-      date: expense.date,
-      employee: expense.employee,
-      description: expense.description,
+      category: item.category,
+      amount: item.amount,
+      date: item.date,
+      employee: item.employee,
+      description: item.description,
     });
-    setShowExpenseModal(true);
+    setShowModal(true);
   };
 
-  const handleSaveExpense = (e) => {
+  const handleOpenDeleteModal = (type, index) => {
+    setDeleteModal({ isOpen: true, index, type });
+  };
+
+  const confirmDelete = () => {
+    if (deleteModal.index !== null) {
+      if (deleteModal.type === "income") {
+        setIncomes(incomes.filter((_, i) => i !== deleteModal.index));
+      } else {
+        setExpenses(expenses.filter((_, i) => i !== deleteModal.index));
+      }
+    }
+    setDeleteModal({ isOpen: false, index: null, type: null });
+  };
+
+  const handleSave = (e) => {
     e.preventDefault();
     if (!formData.amount || Number(formData.amount) <= 0) return;
 
-    const newExpenseData = {
+    const newItemData = {
       category: formData.category,
       amount: Number(formData.amount),
       date: formData.date,
@@ -217,16 +265,39 @@ export default function Finance() {
       description: formData.description || "Izohsiz",
     };
 
-    if (editingExpenseIndex !== null) {
-      const updatedExpenses = [...expenses];
-      updatedExpenses[editingExpenseIndex] = newExpenseData;
-      setExpenses(updatedExpenses);
+    if (modalType === "income") {
+      if (editingIndex !== null) {
+        const updated = [...incomes];
+        updated[editingIndex] = newItemData;
+        setIncomes(updated);
+      } else {
+        setIncomes([newItemData, ...incomes]);
+      }
     } else {
-      setExpenses([newExpenseData, ...expenses]);
+      if (editingIndex !== null) {
+        const updated = [...expenses];
+        updated[editingIndex] = newItemData;
+        setExpenses(updated);
+      } else {
+        setExpenses([newItemData, ...expenses]);
+      }
     }
 
-    setShowExpenseModal(false);
+    setShowModal(false);
   };
+
+  // Jadval uchun ma'lumotlarni birlashtirish yoki saralash
+  const filteredTableData = useMemo(() => {
+    const incs = incomes.map((item) => ({ ...item, type: "income" }));
+    const exps = expenses.map((item) => ({ ...item, type: "expense" }));
+    
+    let combined = [];
+    if (activeTab === "all") combined = [...incs, ...exps];
+    if (activeTab === "income") combined = incs;
+    if (activeTab === "expense") combined = exps;
+
+    return combined.sort((a, b) => new Date(b.date) - new Date(a.date));
+  }, [incomes, expenses, activeTab]);
 
   return (
     <div className="space-y-6 fade-in pb-8">
@@ -246,7 +317,7 @@ export default function Finance() {
             className="text-sm mt-0.5"
             style={{ color: "var(--text-muted)" }}
           >
-            Daromad, xarajatlar va moliyaviy ko'rsatkichlar
+            Kirim, chiqim va moliyaviy ko'rsatkichlar boshqaruvi
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -262,15 +333,24 @@ export default function Finance() {
             <Download size={14} /> Export
           </button>
           <button
-            onClick={handleOpenAddModal}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            onClick={() => handleOpenModal("income")}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
             style={{
-              background: "linear-gradient(135deg,var(--brand),var(--brand-hover))",
-              boxShadow: "0 2px 8px rgba(37,99,235,0.25)",
+              background: "var(--success)",
               cursor: "pointer",
             }}
           >
-            <Plus size={15} /> Xarajat qo'shish
+            <ArrowUpRight size={15} /> Kirim qo'shish
+          </button>
+          <button
+            onClick={() => handleOpenModal("expense")}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+            style={{
+              background: "var(--danger)",
+              cursor: "pointer",
+            }}
+          >
+            <ArrowDownRight size={15} /> Chiqim qo'shish
           </button>
         </div>
       </div>
@@ -463,7 +543,7 @@ export default function Finance() {
         </div>
       </div>
 
-      {/* So'nggi xarajatlar jadvali */}
+      {/* Operatsiyalar jadvali (Kirim va Chiqimlar) */}
       <div
         className="rounded-2xl overflow-hidden"
         style={{
@@ -483,13 +563,36 @@ export default function Finance() {
               color: "var(--text-primary)",
             }}
           >
-            So'nggi xarajatlar
+            Kirim va Chiqim operatsiyalari
           </h2>
+          <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl text-xs font-medium">
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${activeTab === "all" ? "bg-white shadow-sm text-blue-600" : "text-gray-600"}`}
+              style={{ cursor: "pointer" }}
+            >
+              Barchasi
+            </button>
+            <button
+              onClick={() => setActiveTab("income")}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${activeTab === "income" ? "bg-white shadow-sm text-green-600" : "text-gray-600"}`}
+              style={{ cursor: "pointer" }}
+            >
+              Kirimlar
+            </button>
+            <button
+              onClick={() => setActiveTab("expense")}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${activeTab === "expense" ? "bg-white shadow-sm text-red-600" : "text-gray-600"}`}
+              style={{ cursor: "pointer" }}
+            >
+              Chiqimlar
+            </button>
+          </div>
         </div>
         <table className="w-full text-left border-collapse">
           <thead>
             <tr style={{ background: "var(--table-stripe)" }}>
-              {["Kategoriya", "Summa", "Sana", "Xodim", "Tavsif", "Amallar"].map((h) => (
+              {["Turi", "Kategoriya", "Summa", "Sana", "Xodim", "Tavsif", "Amallar"].map((h) => (
                 <th
                   key={h}
                   className="px-5 py-3 text-xs font-semibold"
@@ -501,8 +604,9 @@ export default function Finance() {
             </tr>
           </thead>
           <tbody>
-            {expenses.map((exp, i) => {
-              const cat = initialCategories.find((c) => c.name === exp.category);
+            {filteredTableData.map((item, i) => {
+              const isIncome = item.type === "income";
+              const cat = initialCategories.find((c) => c.name === item.category);
               return (
                 <tr
                   key={i}
@@ -512,58 +616,84 @@ export default function Finance() {
                   }}
                 >
                   <td className="px-5 py-3.5">
+                    <span
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
+                      style={{
+                        background: isIncome ? "rgba(16, 185, 129, 0.1)" : "rgba(239, 68, 68, 0.1)",
+                        color: isIncome ? "var(--success)" : "var(--danger)",
+                      }}
+                    >
+                      {isIncome ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                      {isIncome ? "Kirim" : "Chiqim"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2">
                       <div
                         className="w-2 h-2 rounded-full"
                         style={{
-                          background: cat?.color || "var(--brand)",
+                          background: isIncome ? "var(--success)" : (cat?.color || "var(--brand)"),
                         }}
                       />
                       <span
                         className="text-sm font-medium"
                         style={{ color: "var(--text-primary)" }}
                       >
-                        {exp.category}
+                        {item.category}
                       </span>
                     </div>
                   </td>
                   <td
                     className="px-5 py-3.5 text-sm font-semibold"
-                    style={{ color: "var(--danger)" }}
+                    style={{ color: isIncome ? "var(--success)" : "var(--danger)" }}
                   >
-                    -{Number(exp.amount).toLocaleString()} so'm
+                    {isIncome ? "+" : "-"}{Number(item.amount).toLocaleString()} so'm
                   </td>
                   <td
                     className="px-5 py-3.5 text-xs"
                     style={{ color: "var(--text-faint)" }}
                   >
-                    {exp.date}
+                    {item.date}
                   </td>
                   <td
                     className="px-5 py-3.5 text-sm"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    {exp.employee}
+                    {item.employee}
                   </td>
                   <td
                     className="px-5 py-3.5 text-sm"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    {exp.description}
+                    {item.description}
                   </td>
                   <td className="px-5 py-3.5 text-sm">
-                    <button
-                      onClick={() => handleOpenEditModal(i, exp)}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1 text-xs font-medium"
-                      style={{
-                        color: "var(--brand)",
-                        border: "1px solid var(--border)",
-                        cursor: "pointer",
-                      }}
-                      title="Tahrirlash"
-                    >
-                      <Pencil size={13} /> Edit
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => handleOpenEditModal(item.type, isIncome ? incomes.indexOf(item) : expenses.indexOf(item), item)}
+                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1 text-xs font-medium"
+                        style={{
+                          color: "var(--brand)",
+                          border: "1px solid var(--border)",
+                          cursor: "pointer",
+                        }}
+                        title="Tahrirlash"
+                      >
+                        <Pencil size={13} /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleOpenDeleteModal(item.type, isIncome ? incomes.indexOf(item) : expenses.indexOf(item))}
+                        className="p-1.5 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1 text-xs font-medium"
+                        style={{
+                          color: "var(--danger)",
+                          border: "1px solid rgba(239, 68, 68, 0.2)",
+                          cursor: "pointer",
+                        }}
+                        title="O'chirish"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -572,13 +702,13 @@ export default function Finance() {
         </table>
       </div>
 
-      {/* Modal */}
-      {showExpenseModal && (
+      {/* Qo'shish / Tahrirlash modali */}
+      {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           style={{
-            background: "rgba(17,24,39,0.45)",
-            backdropFilter: "blur(4px)",
+            background: "rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(2px)",
           }}
         >
           <div
@@ -596,10 +726,12 @@ export default function Finance() {
                   color: "var(--text-primary)",
                 }}
               >
-                {editingExpenseIndex !== null ? "Xarajatni tahrirlash" : "Xarajat qo'shish"}
+                {editingIndex !== null
+                  ? (modalType === "income" ? "Kirimni tahrirlash" : "Xarajatni tahrirlash")
+                  : (modalType === "income" ? "Kirim (daromad) qo'shish" : "Xarajat qo'shish")}
               </h2>
               <button
-                onClick={() => setShowExpenseModal(false)}
+                onClick={() => setShowModal(false)}
                 className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
                 style={{ cursor: "pointer" }}
               >
@@ -607,7 +739,7 @@ export default function Finance() {
               </button>
             </div>
 
-            <form onSubmit={handleSaveExpense} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-4">
               <div>
                 <label
                   className="block text-xs font-semibold mb-1.5"
@@ -628,12 +760,23 @@ export default function Finance() {
                     cursor: "pointer",
                   }}
                 >
-                  {initialCategories.map((c) => (
-                    <option key={c.name} value={c.name}>
-                      {c.name}
-                    </option>
-                  ))}
-                  <option value="Inventar">Inventar</option>
+                  {modalType === "income" ? (
+                    <>
+                      <option value="Savdo">Savdo</option>
+                      <option value="Buyurtmalar">Buyurtmalar</option>
+                      <option value="Xizmatlar">Xizmatlar</option>
+                      <option value="Boshqa daromad">Boshqa daromad</option>
+                    </>
+                  ) : (
+                    <>
+                      {initialCategories.map((c) => (
+                        <option key={c.name} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                      <option value="Inventar">Inventar</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -642,7 +785,7 @@ export default function Finance() {
                   className="block text-xs font-semibold mb-1.5"
                   style={{ color: "var(--text-secondary)" }}
                 >
-                  Summa
+                  Summa (so'm)
                 </label>
                 <input
                   type="number"
@@ -739,7 +882,7 @@ export default function Finance() {
               <div className="flex gap-3 mt-6">
                 <button
                   type="button"
-                  onClick={() => setShowExpenseModal(false)}
+                  onClick={() => setShowModal(false)}
                   className="flex-1 py-2.5 rounded-xl font-semibold text-sm border hover:bg-gray-50 transition-colors"
                   style={{
                     border: "1px solid var(--border)",
@@ -753,7 +896,7 @@ export default function Finance() {
                   type="submit"
                   className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white hover:opacity-90 transition-opacity"
                   style={{
-                    background: "var(--brand)",
+                    background: modalType === "income" ? "var(--success)" : "var(--danger)",
                     cursor: "pointer",
                   }}
                 >
@@ -761,6 +904,86 @@ export default function Finance() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* O'chirishni tasdiqlash modali */}
+      {deleteModal.isOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{
+            background: "rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(2px)",
+          }}
+          onClick={() => setDeleteModal({ isOpen: false, index: null, type: null })}
+        >
+          <div
+            className="rounded-3xl p-6 w-full max-w-sm slide-up text-center"
+            style={{
+              background: "var(--surface)",
+              boxShadow: "0 20px 60px rgba(15,23,42,0.2)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                width: "50px",
+                height: "50px",
+                borderRadius: "50%",
+                background: "rgba(239, 68, 68, 0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px auto",
+                color: "var(--danger)",
+              }}
+            >
+              <AlertTriangle size={24} />
+            </div>
+
+            <h2
+              className="font-display font-bold text-lg mb-2"
+              style={{
+                fontFamily: "'Manrope',sans-serif",
+                color: "var(--text-primary)",
+              }}
+            >
+              Operatsiyani o'chirish
+            </h2>
+            <p
+              className="text-sm mb-6"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Haqiqatan ham ushbu yozuvni o'chirib tashlamoqchimisiz?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteModal({ isOpen: false, index: null, type: null })}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm border transition-colors"
+                style={{
+                  border: "1px solid var(--border)",
+                  color: "var(--text-secondary)",
+                  background: "var(--surface)",
+                  cursor: "pointer",
+                }}
+              >
+                Yo'q
+              </button>
+              <button
+                type="button"
+                onClick={confirmDelete}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white transition-opacity"
+                style={{
+                  background: "var(--danger)",
+                  cursor: "pointer",
+                }}
+              >
+                Ha, o'chirish
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -13,6 +13,7 @@ import {
   Edit2,
   PackagePlus,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { products as initialProducts } from "../data/mockData";
 
@@ -49,6 +50,10 @@ export default function POS() {
   // Modal holatlari
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  
+  // O'chirishni tasdiqlash uchun modal holati
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, productId: null });
+
   const [formData, setFormData] = useState({
     name: "",
     category: "Maishiy kimyo",
@@ -96,11 +101,19 @@ export default function POS() {
 
   const removeItem = (id) => setCart((prev) => prev.filter((c) => c.id !== id));
 
-  // Card'ni o'chirish
-  const handleDeleteProduct = (e, id) => {
+  // O'chirish modalini ochish
+  const handleOpenDeleteModal = (e, id) => {
     e.stopPropagation();
-    setProductList((prev) => prev.filter((p) => p.id !== id));
-    setCart((prev) => prev.filter((c) => c.id !== id));
+    setDeleteModal({ isOpen: true, productId: id });
+  };
+
+  // Haqiqatdan o'chirish
+  const confirmDeleteProduct = () => {
+    if (deleteModal.productId) {
+      setProductList((prev) => prev.filter((p) => p.id !== deleteModal.productId));
+      setCart((prev) => prev.filter((c) => c.id !== deleteModal.productId));
+    }
+    setDeleteModal({ isOpen: false, productId: null });
   };
 
   // Tahrirlash modalini ochish
@@ -252,7 +265,7 @@ export default function POS() {
                   cursor: isOutOfStock ? "not-allowed" : "pointer",
                   display: "flex",
                   flexDirection: "column",
-                  justify: "space-between",
+                  justifyContent: "space-between",
                 }}
               >
                 <div>
@@ -278,7 +291,7 @@ export default function POS() {
                 <div
                   style={{
                     display: "flex",
-                    justify: "flex-end",
+                    justifyContent: "flex-end",
                     gap: "6px",
                     marginTop: "10px",
                     paddingTop: "6px",
@@ -303,7 +316,7 @@ export default function POS() {
                     <Edit2 size={13} color="#555" /> Tahrirlash
                   </button>
                   <button
-                    onClick={(e) => handleDeleteProduct(e, p.id)}
+                    onClick={(e) => handleOpenDeleteModal(e, p.id)}
                     style={{
                       border: "none",
                       background: "rgba(255, 0, 0, 0.08)",
@@ -455,6 +468,79 @@ export default function POS() {
           </button>
         </div>
       </div>
+
+      {/* Mahsulotni o'chirishni tasdiqlash modali (Orqa foni shaffof qilindi) */}
+      {deleteModal.isOpen && (
+        <div className="modal-overlay" style={{ background: "transparent" }} onClick={() => setDeleteModal({ isOpen: false, productId: null })}>
+          <div
+            className="modal-card"
+            style={{ 
+              maxWidth: "360px", 
+              textAlign: "center", 
+              padding: "24px",
+              boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+              border: "1px solid rgba(0,0,0,0.06)"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              style={{ 
+                width: "50px", 
+                height: "50px", 
+                borderRadius: "50%", 
+                background: "rgba(255, 0, 0, 0.1)", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                margin: "0 auto 16px auto",
+                color: "#d32f2f" 
+              }}
+            >
+              <AlertTriangle size={24} />
+            </div>
+            
+            <h2 className="modal-title" style={{ fontSize: "18px", marginBottom: "8px" }}>
+              Mahsulotni o'chirish
+            </h2>
+            <p className="modal-subtitle" style={{ fontSize: "14px", color: "#666", marginBottom: "20px" }}>
+              Haqiqatan ham ushbu mahsulotni o'chirib tashlamoqchimisiz?
+            </p>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, productId: null })}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "1px solid #ddd",
+                  background: "#f9f9f9",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                  color: "#333",
+                }}
+              >
+                Yo'q
+              </button>
+              <button
+                onClick={confirmDeleteProduct}
+                style={{
+                  flex: 1,
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "none",
+                  background: "#d32f2f",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontWeight: "500",
+                }}
+              >
+                Ha, o'chirish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mahsulot qo'shish / tahrirlash modali */}
       {isModalOpen && (

@@ -150,7 +150,7 @@ export default function Login({ onLogin }) {
                 color: "var(--text-primary)",
               }}
             >
-              Xush kelibsiz! 👋
+              Xush kelibsiz! 
             </h2>
             <p
               className="text-sm"
