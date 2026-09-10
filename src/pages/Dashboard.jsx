@@ -214,7 +214,7 @@ export default function Dashboard({ onNavigate }) {
               color: "var(--text-primary)",
             }}
           >
-            Xush kelibsiz, Admin 👋
+            Xush kelibsiz, Admin 
           </h1>
           <p
             className="text-sm mt-0.5"
